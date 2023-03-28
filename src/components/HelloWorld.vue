@@ -1,6 +1,7 @@
 <script setup>
 import { Chat } from "@chat-ui/vue3"
 import { ref } from "vue";
+import { Configuration, OpenAIApi } from "openai"
 
 defineProps({
   msg: {
@@ -23,14 +24,31 @@ const handlerMessage = (msg) => {
 }
 
 const getGPT = async (msg) => {
-  const host = window.location.hostname
-  console.log(host)
-  const response = await fetch(`http://${host}:3000/text/?prompt="${msg}"`)
-  const res = await response.json()
+  const configuration = new Configuration({
+    organization: import.meta.env.VITE_OPENAI_ORG,
+    apiKey: import.meta.env.VITE_OPENAI_KEY,
+  })
+  const openai = new OpenAIApi(configuration)
+
+  const completion = await openai.createChatCompletion({
+    model: 'gpt-3.5-turbo',
+    messages: [{
+      role: 'user',
+      content: msg,
+    }],
+    max_tokens: 1000,
+    temperature: 0.5,
+  }).catch((error) => {
+    console.log(error)
+    return
+  })
+
+  const res = completion.data.choices[0].message.content
+
   const chatMsg = {
     type: 'chatbot',
     timestamp: (new Date()).getDate(),
-    message: res.text,
+    message: res,
   }
   chat.value.push(chatMsg)
 }
