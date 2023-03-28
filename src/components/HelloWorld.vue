@@ -12,15 +12,16 @@ defineProps({
 
 const chat = ref([])
 
-const handlerMessage = (msg) => {
+const handlerMessage = async (msg) => {
   console.log(msg)
   chat.value.push({
     message: msg,
     type: 'person',
-    timestamp: '2021/01/01',
+    timestamp: formatDate(),
   })
 
-  getGPT(msg)
+  const res = await getGPT(msg)
+  setChatData(res)
 }
 
 const getGPT = async (msg) => {
@@ -43,14 +44,29 @@ const getGPT = async (msg) => {
     return
   })
 
-  const res = completion.data.choices[0].message.content
+  return completion.data.choices[0].message.content
+}
 
+const setChatData = (msg) => {
   const chatMsg = {
     type: 'chatbot',
-    timestamp: (new Date()).getDate(),
-    message: res,
+    timestamp: formatDate(),
+    message: msg,
   }
+
   chat.value.push(chatMsg)
+}
+
+const formatDate = () => {
+  const now = new Date()
+
+  const year = now.getFullYear()
+  const month = now.getMonth()
+  const day = now.getDay()
+  const hour = now.getHours()
+  const min = now.getMinutes()
+
+  return `${year}/${month}/${day} ${hour}:${min}`
 }
 </script>
 
